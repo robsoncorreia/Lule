@@ -1,5 +1,4 @@
 import pyxel
-import random
 from math import sqrt
 
 COLOR_ACTIVE = pyxel.COLOR_GREEN
@@ -11,82 +10,113 @@ HEIGTH = 120
 TITLE = "Robson Correia"
 GAME_OVER = "GAME OVER!"
 YOU_WIN = "YOU WIN!"
+CIRCLES = 20
+TIME = 2 * CIRCLES
+BORDER = 20
 
 pyxel.game_over = False
+
+
+class Circle:
+    def __init__(self, x, y, id):
+        self.sleep = False
+        self.x = x
+        self.y = y
+        self.id = id
+
+
+circles = []
+
 
 class App:
     def __init__(self):
 
         pyxel.init(WIDTH, HEIGTH, TITLE)
 
-        pyxel.sleep1 = False
-        pyxel.sleep2 = False
-        pyxel.sleep3 = False
+        pyxel.image(0).load(0, 0, "assets\me.png")
 
-        pyxel.x1 = random.uniform(20, 140)
-        pyxel.x2 = random.uniform(20, 140)
-        pyxel.x3 = random.uniform(20, 140)
-
-        pyxel.y1 = random.uniform(20, 100)
-        pyxel.y2 = random.uniform(20, 100)
-        pyxel.y3 = random.uniform(20, 100)
+        for id in range(CIRCLES):
+            circles.append(
+                Circle(pyxel.rndi(BORDER, WIDTH - BORDER), pyxel.rndi(BORDER, HEIGTH - BORDER), id))
 
         pyxel.mouse(True)
-        
+
         pyxel.run(self.update, self.draw)
 
-    def in_circle(arg, x, y, cx, cy):
-        dist = sqrt((x - cx) ** 2 + (y - cy) ** 2)
-        return dist <= RADIUS
+    def reset(args):
+        for circle in circles:
+            circle.sleep = False
 
-    def you_win(arg, x1, x2, x3):
-        return x1 == x2 == x3 == True
+    def in_circle(args):
+        for circle in circles:
+            if (not circle.sleep):
+                dist = sqrt((pyxel.mouse_x - circle.x) ** 2 +
+                            (pyxel.mouse_y - circle.y) ** 2)
+                circle.sleep = dist <= RADIUS
+
+    def you_win(args):
+        for circle in circles:
+            if (not circle.sleep):
+                return False
+        return True
 
     def update(self):
+        if pyxel.btnp(pyxel.KEY_R):
+            self.reset()
+
         if pyxel.btnp(pyxel.KEY_Q):
             pyxel.quit()
 
-        if pyxel.frame_count > 30 * 5:
+        if pyxel.frame_count > 30 * TIME:
             pyxel.game_over = True
 
         if pyxel.game_over:
             return
 
-        if self.you_win(pyxel.sleep1, pyxel.sleep2, pyxel.sleep3):
+        if self.you_win():
             return
 
         if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
-            if self.in_circle(pyxel.mouse_x, pyxel.mouse_y, pyxel.x1, pyxel.y1):
-                pyxel.sleep1 = True
-            if self.in_circle(pyxel.mouse_x, pyxel.mouse_y, pyxel.x2, pyxel.y2):
-                pyxel.sleep2 = True
-            if self.in_circle(pyxel.mouse_x, pyxel.mouse_y, pyxel.x3, pyxel.y3):
-                pyxel.sleep3 = True
+            self.in_circle()
 
-        if not pyxel.sleep1:
-            pyxel.x1 = pyxel.x1 + random.uniform(-STEP, STEP)
-            pyxel.y1 = pyxel.y1 + random.uniform(-STEP, STEP)
+        for circle in circles:
+            if not circle.sleep:
+                if not circle.x > WIDTH - BORDER:
+                    circle.x += pyxel.rndi(-STEP, STEP)
+                else:
+                    circle.x = WIDTH - BORDER
 
-        if not pyxel.sleep2:
-            pyxel.x2 = pyxel.x2 + random.uniform(-STEP, STEP)
-            pyxel.y2 = pyxel.y2 + random.uniform(-STEP, STEP)
+                if not circle.x < BORDER:
+                    circle.x += pyxel.rndi(-STEP, STEP)
+                else:
+                    circle.x = BORDER
 
-        if not pyxel.sleep3:
-            pyxel.x3 = pyxel.x3 + random.uniform(-STEP, STEP)
-            pyxel.y3 = pyxel.y3 + random.uniform(-STEP, STEP)
+                if not circle.y > HEIGTH - BORDER:
+                    circle.y += pyxel.rndi(-STEP, STEP)
+                else:
+                    circle.y = HEIGTH - BORDER
+
+                if not circle.y < BORDER:
+                    circle.y += pyxel.rndi(-STEP, STEP)
+                else:
+                    circle.y = BORDER
+
+    def create_circ(args):
+        for circle in circles:
+            pyxel.circ(circle.x, circle.y,
+                       RADIUS if not circle.sleep else 4,
+                       COLOR_SLEEP if circle.sleep else COLOR_ACTIVE)
 
     def draw(self):
 
         pyxel.cls(pyxel.COLOR_BLACK)
 
-        pyxel.circ(pyxel.x1, pyxel.y1, RADIUS,
-                   COLOR_SLEEP if pyxel.sleep1 else COLOR_ACTIVE)
-        pyxel.circ(pyxel.x2, pyxel.y2, RADIUS,
-                   COLOR_SLEEP if pyxel.sleep2 else COLOR_ACTIVE)
-        pyxel.circ(pyxel.x3, pyxel.y3, RADIUS,
-                   COLOR_SLEEP if pyxel.sleep3 else COLOR_ACTIVE)
+        self.create_circ()
 
-        if self.you_win(pyxel.sleep1, pyxel.sleep2, pyxel.sleep3):
+        pyxel.text(
+            0, 0, f'Time: {pyxel.frame_count % 16}', pyxel.frame_count % 16)
+
+        if self.you_win():
             x = (WIDTH // 2) - (len(YOU_WIN) // 2) * pyxel.FONT_WIDTH
             y = (HEIGTH // 2) - pyxel.FONT_HEIGHT
             pyxel.text(x, y, YOU_WIN, pyxel.frame_count % 16)
@@ -97,5 +127,6 @@ class App:
             y = (HEIGTH // 2) - pyxel.FONT_HEIGHT
             pyxel.text(x, y, GAME_OVER, pyxel.frame_count % 16)
             return
+
 
 App()
