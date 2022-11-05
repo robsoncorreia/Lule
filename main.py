@@ -32,8 +32,7 @@ class App:
     def __init__(self):
 
         pyxel.init(WIDTH, HEIGTH, TITLE)
-
-        pyxel.image(0).load(0, 0, "assets\me.png")
+        pyxel.load("main.py.pyxres")
 
         for id in range(CIRCLES):
             circles.append(
@@ -103,9 +102,9 @@ class App:
 
     def create_circ(args):
         for circle in circles:
-            pyxel.circ(circle.x, circle.y,
-                       RADIUS if not circle.sleep else 4,
-                       COLOR_SLEEP if circle.sleep else COLOR_ACTIVE)
+            pyxel.blt(circle.x, circle.y, 1,
+                      0 if not circle.sleep else 16,
+                      0 if not circle.sleep else 32, 8, 8)
 
     def draw(self):
 
