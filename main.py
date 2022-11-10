@@ -11,8 +11,8 @@ TITLE = "Robson Correia"
 GAME_OVER = "GAME OVER!"
 YOU_WIN = "YOU WIN!"
 CIRCLES = 20
-TIME = 2 * CIRCLES
 BORDER = 20
+FPS = 30
 
 
 pyxel.game_over = False
@@ -43,8 +43,11 @@ class App:
 
         self.gameOver = False
 
-        pyxel.init(WIDTH, HEIGTH, TITLE)
+        pyxel.init(WIDTH, HEIGTH, TITLE, FPS)
+
         pyxel.load("main.py.pyxres")
+
+        self.countdown = pyxel.frame_count + 30 * CIRCLES
 
         for id in range(CIRCLES):
             circles.append(
@@ -54,7 +57,9 @@ class App:
 
         pyxel.run(self.update, self.draw)
 
-    def reset(args):
+    def reset(self):
+        self.countdown = pyxel.frame_count + 30 * CIRCLES
+        self.gameOver = False
         for circle in circles:
             circle.isClicked = False
 
@@ -71,7 +76,7 @@ class App:
         if pyxel.btnp(pyxel.KEY_Q):
             pyxel.quit()
 
-        if pyxel.frame_count > 30 * TIME:
+        if pyxel.frame_count > self.countdown:
             self.gameOver = True
 
         if self.gameOver:
@@ -117,14 +122,6 @@ class App:
 
         pyxel.cls(pyxel.COLOR_BLACK)
 
-        self.draw_circle()
-
-        if not self.gameOver:
-            pyxel.text(
-                0, 6, f'Time: {pyxel.frame_count % 16}', pyxel.frame_count % 16)
-            pyxel.text(
-                0, 0, f'Score: {self.score}', pyxel.frame_count % 16)
-
         if self.you_win():
             x = (WIDTH // 2) - (len(YOU_WIN) // 2) * pyxel.FONT_WIDTH
             y = (HEIGTH // 2) - pyxel.FONT_HEIGHT
@@ -136,6 +133,13 @@ class App:
             y = (HEIGTH // 2) - pyxel.FONT_HEIGHT
             pyxel.text(x, y, GAME_OVER, pyxel.frame_count % 16)
             return
+        else:
+            pyxel.text(
+                2, 2, f'Time: {self.countdown - pyxel.frame_count}', pyxel.frame_count % 16)
+            pyxel.text(
+                2, 8, f'Score: {self.score}', pyxel.frame_count % 16)
+
+        self.draw_circle()
 
 
 App()
